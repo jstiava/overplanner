@@ -1,0 +1,36 @@
+snippet edf "export default function" w
+export default function ${1:FunctionName}() {
+
+	return (
+		<>
+			<p>TODO - render content here</p>
+		</>
+	);
+}
+endsnippet
+
+
+snippet ef "export function" w
+export function ${1:FunctionName}() {
+
+	return (
+		<>
+			<p>TODO - render content here</p>
+		</>
+	);
+}
+endsnippet
+
+
+snippet usn "use state number" w
+const [${1:StateName}, setStateName] = useState<number | null>(null);
+endsnippet
+
+
+snippet ue "use effect" w
+useEffect(() => {
+    
+}, []);
+endsnippet
+
+

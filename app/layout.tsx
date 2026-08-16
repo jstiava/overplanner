@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Overpass } from "next/font/google";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+import LoadingBarProvider from "@/components/LoadingBarProvider";
+
+// @ts-ignore
 import "./globals.css";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -9,6 +16,12 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+
+const overpassFont = Overpass({
+  variable: "--font-overpass",
   subsets: ["latin"],
 });
 
@@ -23,11 +36,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${overpassFont.variable} antialiased`}
       >
-        {children}
+        <TooltipProvider>
+          <Toaster />
+          {children}
+          <LoadingBarProvider />
+        </TooltipProvider>
       </body>
     </html>
   );

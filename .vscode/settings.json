@@ -1,0 +1,29 @@
+{
+  /* --- Disable GitHub Copilot Completely --- */
+  "github.copilot.enable": {
+    "*": false
+  },
+  "github.copilot.editor.enableAutoCompletions": false,
+
+  /* --- Disable Copilot / AI Code Actions & In-line Hovers --- */
+  "editor.codeActionWidget.includeNearbyQuickFixes": false,
+  "inlineChat.holdForSpeech": false,
+
+  /* --- Disable Editor Ghost Text / Inline Suggestions --- */
+  "editor.inlineSuggest.enabled": false,
+
+  /* --- Disable Ghost Code "Fix with Copilot" Hints on Diagnostics --- */
+  "editor.experimental.asyncColorization": true,
+  /* Disable Copilot Chat Inline Code Actions (Fix / Explain) */
+  "github.copilot.chat.editor.enableCodeActions": false,
+  "github.copilot.chat.welcomeMessage": "never",
+  
+  /* Disable Inline Code Lenses / Prompts above functions */
+  "editor.codeLens": false,
+  /* --- My custom --- */
+  "js/ts.preferences.autoImportFileExcludePatterns": [
+    "**/node_modules/@base-ui/react/**"
+  ],
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "hsnips.hsnipsPath": "${workspaceFolder}/.hsnips"
+}

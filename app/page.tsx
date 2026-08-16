@@ -1,65 +1,73 @@
+'use client'
+import { CalendarProblems } from "@/components/CalendarProblems";
+import MarketingHeader from "@/components/MarketingHeader";
+import { PlanningTransformation } from "@/components/PlanningTransformation";
+import SortableSpacerList from "@/components/SortableSpacerList";
+import { ThemeProvider } from "@/components/theme-provider";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+
+  const router = useRouter();
+
+
+  const DAY_INDEX = 0
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <ThemeProvider
+      attribute="class"
+      forcedTheme={'dark'}
+    >
+
+
+      <div className="flex flex-col w-full items-center dark bg-background text-foreground min-h-screen">
+
+        {/* Header menu */}
+        <MarketingHeader />
+
+        {/* Hero */}
+        <div className="flex flex-col gap-6 justify-start w-full h-fit  rounded-sm pt-10 px-10">
+          <span className="text-6xl w-full text-center tracking-tight font-bold">Track. Anticipate. Grow.</span>
+          <p className="w-full text-center tracking-tight opacity-50">The last calendar you'll ever use.</p>
+          {/* Mockup */}
+          <div className="flex w-full px-1 justify-center h-fit">
+            <div className="flex bg-contain bg-no-repeat w-full bg-center max-w-[800px] aspect-[4/3]" style={{
+              backgroundImage: `url("Screenshot 2026-03-31 090610-front.png")`
+            }} />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* <SortableSpacerList /> */}
+
+        <CalendarProblems />
+
+        <PlanningTransformation />
+
+
+      </div>
+    </ThemeProvider>
   );
+}
+
+
+function filterByDay<T>(data: T[], dayIndex: number): T[] {
+  const start = dayIndex * 24;
+  const end = start + 24;
+  return data.slice(start, end);
+}
+
+function getDayFromObject(
+  data: Record<string, number>,
+  dayIndex: number
+) {
+  const start = dayIndex * 24;
+  const end = start + 23;
+
+  return Object.entries(data)
+    .filter(([k]) => {
+      const i = Number(k);
+      return i >= start && i <= end;
+    })
+    .map(([k, v]) => ({ x: Number(k), y: v }));
 }
