@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
@@ -17,10 +18,14 @@ import {
   CircleSmallIcon,
   MapPinIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 
 
 export function EventTypes() {
+
+  const router = useRouter();
+
   return (
     <section className="flex flex-col w-full px-6 py-24">
       <div className="mx-auto max-w-6xl">
@@ -43,8 +48,9 @@ export function EventTypes() {
             const Icon = type.icon;
 
             return (
-              <div
+              <a
                 key={type.title}
+                href={type.path}
                 className="group rounded-lg border bg-background p-5 transition-colors hover:bg-muted/30"
               >
                 <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
@@ -59,22 +65,10 @@ export function EventTypes() {
                   {type.description}
                 </p>
 
-                {type.example && (
-                  <div className={cn(
-                    "mt-5 rounded-lg border bg-muted/40 px-3 py-2 h-16 text-sm",
-                    type.example.classNames
-                  )}>
-                    <div className="flex flex-col w-full gap-1">
-                      {type.example.time_text && <p className="text-[0.6rem] opacity-50">{type.example.time_text}</p>}
-                      <p className="text-xs">{type.example.text}</p>
-                    </div>
-                  </div>
-                )}
-
                 {type.OverrideExampleComponent && (
                   <>{type.OverrideExampleComponent}</>
                 )}
-              </div>
+              </a>
             );
           })}
         </div>
@@ -88,12 +82,13 @@ const EVENT_TYPES = [
   {
     icon: CalendarDays,
     title: "Calendar",
+    path: '/types/calendar',
     description:
       "A collection of events and todos for personal use or shared with a team.",
     OverrideExampleComponent: (
       <div className="mt-5 flex flex-col gap-1">
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-[0.4rem]  h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-[0.4rem]  h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit items-center">
@@ -102,7 +97,7 @@ const EVENT_TYPES = [
           </div>
         </div>
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit items-center">
@@ -111,7 +106,7 @@ const EVENT_TYPES = [
           </div>
         </div>
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit items-center">
@@ -125,13 +120,14 @@ const EVENT_TYPES = [
   {
     icon: Clock3,
     title: "Single time",
+    path: '/types/single_time',
     description:
       "A traditional event with a start date and end date and time.",
     OverrideExampleComponent: (
       <div className="mt-5 flex flex-col gap-1">
 
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-[0.4rem] pb-4  h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-[0.4rem] pb-4  h-fit text-sm",
         )}>
 
           <div className="flex flex-col w-full gap-1 h-fit">
@@ -140,7 +136,7 @@ const EVENT_TYPES = [
         </div>
 
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-[0.4rem] pb-6 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-[0.4rem] pb-6 h-fit text-sm",
         )}>
 
           <div className="flex flex-col w-full gap-1 h-fit">
@@ -155,13 +151,14 @@ const EVENT_TYPES = [
   {
     icon: MapPinIcon,
     title: "Location",
+    path: '/types/location',
     description:
       "An address, building, room, or suite.",
     OverrideExampleComponent: (
       <div className="mt-5 flex flex-col gap-1">
 
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-2 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-2 h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit">
@@ -175,7 +172,7 @@ const EVENT_TYPES = [
 
 
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-2 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-2 h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit">
@@ -192,13 +189,14 @@ const EVENT_TYPES = [
   {
     icon: CircleSmallIcon,
     title: "Moment",
+    path: '/types/moment',
     description:
       "A meaningful point in time you want to remember or mark.",
     OverrideExampleComponent: (
       <div className="mt-5 flex flex-col gap-1">
 
         <div className={cn(
-          "relative rounded-lg rounded-tl-none border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
+          "relative rounded-sm rounded-tl-none border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
         )}>
           <div className="absolute -top-[0.25rem]  -left-[0.25rem] w-2 h-2  border border-2   rounded-sm border-[#3d3d3d] z-10  bg-background" />
           <div className="flex w-full gap-2 h-fit items-start">
@@ -208,7 +206,7 @@ const EVENT_TYPES = [
         </div>
 
         <div className={cn(
-          "mt-3 relative rounded-lg rounded-tl-none border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
+          "mt-3 relative rounded-sm rounded-tl-none border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
         )}>
           <div className="absolute -top-[0.25rem] -left-[0.25rem] w-2 h-2 border border-2  rounded-sm  border-[#3d3d3d] z-10 bg-background" />
           <div className="flex w-full gap-2 h-fit items-start">
@@ -223,6 +221,7 @@ const EVENT_TYPES = [
   {
     icon: Sun,
     title: "All day",
+    path: '/types/all_day',
     description:
       "Something that belongs to a particular day rather than a specific time.",
     OverrideExampleComponent: (
@@ -251,23 +250,34 @@ const EVENT_TYPES = [
   {
     icon: CalendarClock,
     title: "Multi-day",
+    path: '/types/multi_day',
     description:
       "An event that spans multiple days, with a defined beginning and end.",
-    example: {
-      classNames: "",
-      text: "2026 ABC CONFERENCE at Hilton",
-      time_text: "AUG 14 - 16"
-    }
+    OverrideExampleComponent: (
+      <div className="mt-5 flex flex-col gap-1">
+
+        <div className={cn(
+          "relative rounded-sm border bg-muted/40 px-2 py-[0.4rem] h-fit text-sm",
+        )}>
+          <div className="flex flex-col w-full gap-1 h-fit items-start">
+            <p className="text-[0.6rem] opacity-50">AUG 12 - 15</p>
+            <p className="text-xs">2026 ABC Conference at Hilton</p>
+          </div>
+        </div>
+
+      </div>
+    )
   },
   {
     icon: CheckSquare,
     title: "To-do",
+    path: '/types/todo',
     description:
       "Something you want to accomplish without deciding exactly when it needs to happen.",
     OverrideExampleComponent: (
       <div className="mt-5 flex flex-col gap-1">
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-1 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-1 h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit">
@@ -276,7 +286,7 @@ const EVENT_TYPES = [
           </div>
         </div>
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-1 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-1 h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit">
@@ -285,7 +295,7 @@ const EVENT_TYPES = [
           </div>
         </div>
         <div className={cn(
-          "rounded-lg border bg-muted/40 px-2 py-1 h-fit text-sm",
+          "rounded-sm border bg-muted/40 px-2 py-1 h-fit text-sm",
         )}>
 
           <div className="flex w-full gap-2 h-fit">
@@ -299,6 +309,7 @@ const EVENT_TYPES = [
   {
     icon: DoorOpen,
     title: "Booking space",
+    path: '/types/booking_space',
     description:
       "A period of time that other people can book based on your availability.",
     OverrideExampleComponent: (
@@ -315,7 +326,7 @@ const EVENT_TYPES = [
         </div>
 
         <div className={cn(
-          "rounded-lg border border-dashed px-1 py-1 h-fit text-sm",
+          "rounded-sm border border-dashed px-1 py-1 h-fit text-sm",
         )}>
 
           <div className={cn(
@@ -334,50 +345,11 @@ const EVENT_TYPES = [
     )
   },
   {
-    icon: Link2,
-    title: "Pair",
-    description:
-      "Two related times that belong together, such as a start and end point or an outbound and return trip.",
-    example: {
-      classNames: "",
-      text: "2026 Chicago Cubs",
-    }
-  },
-  {
     icon: CalendarRange,
     title: "All month",
+    path: '/types/all_month',
     description:
       "Something that applies across an entire month rather than a single day.",
-    example: {
-      classNames: "",
-      text: "2026 Chicago Cubs",
-    }
-  },
-  {
-    icon: MousePointer2,
-    title: "Select",
-    description:
-      "Choose specific dates or times from your calendar without creating a scheduled event.",
-    example: {
-      classNames: "",
-      text: "2026 Chicago Cubs",
-    }
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "Select modifier",
-    description:
-      "Add rules or conditions to a date selection to make it more specific.",
-    example: {
-      classNames: "",
-      text: "2026 Chicago Cubs",
-    }
-  },
-  {
-    icon: Grid2X2,
-    title: "Scheduling matrix",
-    description:
-      "Compare multiple dimensions of availability to find when things can happen.",
     example: {
       classNames: "",
       text: "2026 Chicago Cubs",

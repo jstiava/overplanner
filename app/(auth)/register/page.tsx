@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import RenderFormFields from "@/components/formFields/RenderFormFields";
 import { Spinner } from "@/components/Spinner";
+import { toast } from "sonner";
 
 const MONTHS_ARRAY = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -17,17 +18,27 @@ const REGISTRATION_PAGE_FORM_SCHEMA = [
         name: 'Username',
         field: 'username',
         type: "input",
+        props: {
+            autoComplete: "username",
+            name: "username",
+            required: true
+        }
     },
     // {
     //     name: 'Email',
     //     field: 'email',
     //     type: "input",
     // },
-    // {
-    //     name: 'Password',
-    //     field: "password",
-    //     type: "password",
-    // },
+    {
+        name: 'Password',
+        field: "password",
+        type: "password",
+         props: {
+            autoComplete: "new-password",
+            name: "password",
+            required: true
+        }
+    },
     // {
     //     name: 'Confirm Password',
     //     field: "confirm_password",
@@ -84,13 +95,22 @@ export default function RegisterPage() {
             },
             body: JSON.stringify(data),
         })
-            .then(res => {
+            .then(async (res) => {
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message ?? `Request failed (${res.status})`);
+                }
+                toast.success("Account successfully created.")
                 router.push('/login')
                 return;
             })
             .catch(err => {
-                console.log(err)
-                alert("Something went wrong.")
+                console.log({
+                    success: false,
+                    err
+                })
+                toast.error("Failed to register new account.")
+                setProgress('creating')
             })
 
         return;
@@ -128,6 +148,7 @@ export default function RegisterPage() {
                                 setData={setData}
                                 handleChangeData={handleChangeData}
                             />
+                            
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -153,7 +174,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-2 w-full py-4">
-                <Button
+                {/* <Button
                     type="button"
                     variant="outline"
                     className="w-full"
@@ -198,7 +219,7 @@ export default function RegisterPage() {
                         />
                     </svg>
                     Continue with Google
-                </Button>
+                </Button> */}
 
                 <Button
                     onClick={() => router.push("/login")}

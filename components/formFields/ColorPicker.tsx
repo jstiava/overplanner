@@ -48,7 +48,7 @@ export default function ColorPicker({value, initialColor = null, onSelect}: {val
 
     return (
         <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild >
+            <DropdownMenuTrigger >
                 <Button variant="outline">
                     {selected ? (
                         <>

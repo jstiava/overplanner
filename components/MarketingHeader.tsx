@@ -42,6 +42,15 @@ export default function MarketingHeader() {
                         }
                         return null
                     })}
+                    <div className="flex items-center px-4 gap-2">
+                        <Button size={'lg'} onClick={e => {
+                            router.push('/register');
+                            setIsMenuOpen(false)
+                        }}>Register</Button>
+                        <Button key={'login'} variant={'link'} onClick={e => {
+                            router.push('/login')
+                        }}>Login</Button>
+                    </div>
                 </div>
             </div>
 
@@ -92,12 +101,12 @@ const HEADER_MENU_ITEMS = [
         slug: '/',
         type: 'link'
     },
-     {
+    {
         label: "Problem",
         slug: "/problem",
         type: 'link'
     },
-     {
+    {
         label: "Features",
         slug: "/features",
         type: 'link'

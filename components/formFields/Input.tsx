@@ -4,10 +4,13 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { BaseField, FormFieldProps } from "./RenderFormFields";
 import ComboboxEditor from "@/components/editor/ComboboxEditor";
+import { JSX, ReactNode } from "react";
+import { LucideIcon } from "lucide-react";
 
 export type InputField = BaseField & {
     type: "input";
     placeholder: string;
+    Icon?: LucideIcon,
     showLabel?: boolean;
     autoFocus?: boolean;
     className?: string;
@@ -63,16 +66,20 @@ export function InputFormField({ props, data, setData, handleChangeData }: FormF
             className={props.className ?? ""}
         >
             {(props.showLabel === undefined || props.showLabel != false) && <FieldLabel>{props.label ?? props.name}</FieldLabel>}
-            <div className="flex w-full relative">
-                <Input
-                    {...{
-                        ...props,
-                        ...props.props,
-                        value: data[props.field] ?? "",
-                        name: props.field,
-                        onChange: handleChangeData
-                    }}
-                />
+            <div className="relative">
+                <div className="flex w-full relative">
+                    {props.Icon && <props.Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />}
+                    <Input
+                        {...{
+                            ...props,
+                            ...props.props,
+                            value: data[props.field] ?? "",
+                            name: props.field,
+                            onChange: handleChangeData,
+                            className: props.Icon ? 'pl-9' : ''
+                        }}
+                    />
+                </div>
             </div>
         </Field>
     )

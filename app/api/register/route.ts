@@ -11,11 +11,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const drizzle = await Drizzle.getInstance();
 
-  const { name, email, password, birthday, timezone, ...rest } = body
+  const { name, email, username, password, birthday, timezone, ...rest } = body
 
   const [theUser] = await drizzle.db.select().from(Users).where(
     or(
       eq(Users.name, name),
+      eq(Users.username, username),
       eq(Users.username, email),
       eq(Users.email, email),
     )
@@ -46,17 +47,16 @@ export async function POST(req: NextRequest) {
       ...getNewUserTemplate(),
       id: generateUUID(),
       email,
+      username: username ?? email,
       passkey: Passkey,
       home_timezone: timezone,
-      birthday: new Date(birthday),
+      birthday: birthday ? new Date(birthday) : null,
       name
     };
 
-
     // New birthday
-    const initialEventRow = getNewEventTemplate();
-
     if (newUser.birthday) {
+      const initialEventRow = getNewEventTemplate();
       const eventRow = {
         ...initialEventRow,
         name: `${name}'s Birthday`,
@@ -85,8 +85,6 @@ export async function POST(req: NextRequest) {
         .returning()
     }
 
-
-
     // New user
     const createNewUser = await drizzle.db.insert(Users).values(newUser)
 
@@ -100,6 +98,7 @@ export async function POST(req: NextRequest) {
 
   }
   catch (err) {
+    
     console.error(err)
     return NextResponse.json(
       { error: 'An unknown error.' },

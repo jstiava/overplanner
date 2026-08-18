@@ -89,7 +89,7 @@ export const Events = pgTable('events', {
     parent_id: varchar({ length: 255 }),
     location_id: varchar({ length: 255 }),
     end_location_id: varchar({ length: 255 }),
-    
+
     location_details: jsonb("location").$type<{
         name: string;
         line1: string;
@@ -102,10 +102,10 @@ export const Events = pgTable('events', {
 
     description: jsonb(),
     settings: jsonb().$type<{
-        color_options?: {name: string, hex: string, text: string}[],
+        color_options?: { name: string, hex: string, text: string }[],
         preferred_views?: string[],
         preferred_timezones?: string[]
-        
+
     }>(),
 
     created_at: timestamp({ withTimezone: true }),
@@ -144,6 +144,7 @@ export const Users = pgTable("users", {
     status: varchar().default('created_not_activated'),
     is_dark: boolean().default(false).notNull(),
     icon_img_uri: varchar({ length: 255 }),
+    preferred_timezones: text("preferred_timezones").array(),
 })
 
 export const Sessions = pgTable("session", {

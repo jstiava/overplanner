@@ -5,8 +5,7 @@ import Drizzle from '@/lib/drizzle';
 import { generateEventId } from '@/lib/generate_id';
 import { getNewCertificateTemplate, getNewEventTemplate } from '@/lib/events';
 import { cookies } from 'next/headers';
-import getSessionUser from '@/lib/Auth/getUser';
-
+import getSessionUser from '@/lib/getUser';
 
 export type Stub = {
     id: string,
@@ -78,7 +77,7 @@ export async function POST(req: NextRequest) {
             version: 0,
         }
 
-        eventRow['id'] = generateEventId(eventRow)
+        eventRow['id'] = generateEventId(eventRow as any)
 
 
         const inserted = await drizzle.db.insert(Events)
@@ -167,7 +166,7 @@ export async function GET(req: NextRequest) {
                 and(
                     gte(Events.start, startDate),
                     lt(Events.start, endDateSet24HoursAfterStart),
-                    type ? eq(Events.type, type) : undefined
+                    type ? eq(Events.type, type as any) : undefined
                 )
             );
 

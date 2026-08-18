@@ -9,6 +9,8 @@ import TextAreaFormField from "./Textarea";
 import ColumnFormField from "./Column";
 import CommandFormField from "./Command";
 import { ComboboxInputFormField, HorizontalInputFormField, InputField, InputFormField } from "./Input";
+import { CardFormField } from "@/components/formFields/Card";
+import { CustomFormField } from "@/components/formFields/Custom";
 
 export type FormFieldProps<A = BaseField> = {
     props: A,
@@ -26,10 +28,12 @@ export type BaseField = {
 };
 
 
-type FormField = BaseField | SelectField | InputField;
+export type FormField = BaseField | SelectField | InputField;
 
 
 const FORM_FIELDS: Record<string, any> = {
+    'custom': CustomFormField,
+    'card': CardFormField,
     'date': DateFormField,
     'password': PasswordFormField,
     'row': RowFormField,

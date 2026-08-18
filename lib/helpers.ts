@@ -1,7 +1,7 @@
 import getSessionUser from "@/lib/getUser";
 import { OverplannerUserPublicType } from "@/schema";
 import { cookies } from "next/headers";
-import { JSX } from "react";
+import { JSX, ReactNode } from "react";
 
 /**
  * On a given url, params and searchParams would be supplied.
@@ -12,7 +12,7 @@ export type TypicalServerProps<A, B> = {
 }
 
 export type ServerComponentChildren = {
-    children: JSX.Element
+    children: ReactNode
 }
 
 

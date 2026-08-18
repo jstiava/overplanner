@@ -24,6 +24,10 @@ const LOGIN_PAGE_FORM_SCHEMA = [
         name: 'password',
         field: "password",
         type: "password",
+        props: {
+            autoComplete: "password",
+            name: "password"
+        }
     },
 ]
 
@@ -115,20 +119,20 @@ export default function LoginPage() {
                                 Login
                             </Button>
 
-                          
+
                         </div>
                     </>
                 )}
             </div>
-              <div className="flex flex-col gap-2 w-full py-4">
+            <div className="flex flex-col gap-2 w-full py-4">
                 <Button
-                                onClick={() => router.push("/register")}
-                                variant="link"
-                                className="w-full"
-                            >
-                                No account? Create one for free.
-                            </Button>
-              </div>
+                    onClick={() => router.push("/register")}
+                    variant="link"
+                    className="w-full"
+                >
+                    No account? Create one for free.
+                </Button>
+            </div>
         </div>
     );
 }

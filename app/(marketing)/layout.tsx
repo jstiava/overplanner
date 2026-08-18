@@ -20,16 +20,10 @@ export default function Home(props : ServerComponentChildren) {
       attribute="class"
       forcedTheme={'dark'}
     >
-
-
       <div className="flex flex-col w-full items-center dark bg-background text-foreground min-h-screen">
-
         {/* Header menu */}
         <MarketingHeader />
-
         {props.children}
-
-
       </div>
     </ThemeProvider>
   );
