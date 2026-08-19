@@ -11,7 +11,7 @@ import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { $createParagraphNode, $getRoot, EditorState } from "lexical";
+import { $createParagraphNode, $getRoot, EditorState, LexicalEditor } from "lexical";
 import { $convertToMentionNodes, BeautifulMentionNode, BeautifulMentionsComboboxItem, BeautifulMentionsItem, BeautifulMentionsPlugin, BeautifulMentionsPluginProps, createBeautifulMentionNode, useBeautifulMentions } from "lexical-beautiful-mentions";
 import { Dispatch, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Combobox, ComboboxItem } from "../ui/combobox";
@@ -19,7 +19,7 @@ import CustomMentionComponent from "@/components/editor/CustomMentionComponent";
 import { Menu, MenuItem } from "@/components/editor/Menu";
 
 
-const mentionItems: Record<string, BeautifulMentionsItem[]> = {
+const placeholderMentionItems: Record<string, BeautifulMentionsItem[]> = {
   "@": [
     "Anton",
     "Boris",
@@ -40,8 +40,9 @@ const queryMentions = async (
   trigger: string,
   queryString: string,
   asynchronous: boolean,
+  variables: Record<string, BeautifulMentionsItem[]>
 ) => {
-  const items = mentionItems[trigger];
+  const items = variables[trigger];
   if (!items) {
     return [];
   }
@@ -66,27 +67,57 @@ function setEditorState(initialValue: string, triggers: string[]) {
 }
 
 export default function ComboboxEditor(props: {
-  placeholder?: string, autoFocus?: boolean, value: string, name: string, onChange: (e: {
+  placeholder?: string,
+  autoFocus?: boolean,
+  value: string,
+  name: string,
+  variables: Record<string, BeautifulMentionsItem[]>,
+  onChange: (e: {
     target: {
       name: string,
       value: string
     }
-  }) => any
+  }
+  ) => any
 }) {
 
   const [CustomBeautifulMentionNode, replacement] = createBeautifulMentionNode(
     CustomMentionComponent,
   );
 
+  function setEditorState(initialValue: string) {
+    return (editor: LexicalEditor) => {
+      if (!initialValue) {
+        editor.update(() => {
+          const root = $getRoot();
+
+          if (root.getFirstChild() === null) {
+            root.append($createParagraphNode());
+          }
+        });
+
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(initialValue);
+        const editorState = editor.parseEditorState(parsed);
+
+        editor.setEditorState(editorState);
+      } catch (error) {
+        console.error("Failed to parse initial editor value:", error);
+      }
+    };
+  }
+
   return (
     <div className="flex flex-col w-full">
-      
-      <LexicalComposer
 
+      <LexicalComposer
         initialConfig={{
-          namespace: 'editor_v21',
+          namespace: 'editor_v23',
           theme: theme,
-          editorState: setEditorState("", Object.keys(mentionItems)),
+          editorState: setEditorState(props.value),
           onError: (error, editor) => {
             console.error(error)
           },
@@ -103,16 +134,20 @@ export default function ComboboxEditor(props: {
 
 
 
-function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
-  placeholder?: string, autoFocus?: boolean, value: string, name: string, onChange: (e: {
+function Plugins({ placeholder, autoFocus = false, value, name, onChange, variables }: {
+
+  placeholder?: string,
+  autoFocus?: boolean,
+  value: string,
+  name: string,
+  onChange: (e: {
     target: {
       name: string,
       value: string
     }
   }) => any
+  variables: Record<string, BeautifulMentionsItem[]>
 }) {
-
-
 
   const configuration = {
     asynchronous: false,
@@ -136,8 +171,8 @@ function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
   const triggers = useMemo(
     () =>
       configuration.combobox
-        ? Object.keys(mentionItems).filter((k) => k !== "\\w+:")
-        : Object.keys(mentionItems),
+        ? Object.keys(variables).filter((k) => k !== "\\w+:")
+        : Object.keys(variables),
     [configuration.combobox],
   );
   const comboboxAdditionalItems = useMemo(
@@ -163,19 +198,20 @@ function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
     editorState.read(() => {
       const root = $getRoot();
       const value = getDebugTextContent(root);
+
+      const json = editorState.toJSON();
       onChange({
         target: {
-          value,
+          value: JSON.stringify(json),
           name
         }
       });
     });
-
-  }, []);
+  }, [name, onChange]);
 
   const handleSearch = useCallback(
     (trigger: string, queryString: string) =>
-      queryMentions(trigger, queryString, configuration.asynchronous),
+      queryMentions(trigger, queryString, configuration.asynchronous, variables),
     [configuration.asynchronous],
   );
 
@@ -218,7 +254,7 @@ function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
           triggers,
         }
         : {
-          items: mentionItems,
+          items: variables,
         }),
       ...(configuration.combobox
         ? {
@@ -226,8 +262,7 @@ function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
           triggers,
           comboboxOpen: menuOrComboboxOpen,
           comboboxAnchor: anchorElement,
-          comboboxAnchorClassName:
-            "ring-2 ring-ring ring-offset-2 ring-offset-background rounded-md",
+          comboboxAnchorClassName: "ring-2 ring-ring ring-offset-2 ring-offset-background rounded-md",
           comboboxComponent: Combobox,
           comboboxItemComponent: ComboboxItem,
           onComboboxOpen: handleMenuOrComboboxOpen,
@@ -280,7 +315,7 @@ function Plugins({ placeholder, autoFocus = false, value, name, onChange }: {
         )}
       >
         <RichTextPlugin
-        
+
           contentEditable={
             <ContentEditable
               style={{ tabSize: 1 }}

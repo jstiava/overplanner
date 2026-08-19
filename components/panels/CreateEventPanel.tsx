@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { MouseEvent, useContext, useEffect, useState } from "react";
 import {
     CalendarDays,
     Clock,
@@ -31,25 +31,24 @@ import OverplannerDate from "@/lib/DateTime/OverplannerDate";
 import { OverplannerEventType } from "@/schema";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { fromZonedTime } from "date-fns-tz";
+import ComboboxEditor from "@/components/editor/ComboboxEditor";
+import { Spinner } from "@/components/Spinner";
+import { toast } from "sonner";
 
 export type OverplannerCreateEventType = Partial<Omit<OverplannerEventType, "start" | "end" | "start_time" | "end_time"> & {
     start_time: OverplannerDate | null,
     end_time: OverplannerDate | null,
     start: OverplannerDate | null,
     end: OverplannerDate | null,
+    share_with_calendars_and_people: any | null
 }>
 
 export default function CreateEventPanel(props: Panel) {
 
-    const { now, user } = useContext(OverplannerSessionContext)
+    const [progress, setProgress] = useState<'creating' | 'submitting' | 'error' | 'done'>('creating');
+    const { now, user, addNewEvent } = useContext(OverplannerSessionContext)
 
-    const [data, setData] = useState<OverplannerCreateEventType>({
-        start: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-        end: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-        start_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-        end_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-        start_timezone: user?.home_timezone ?? ""
-    });
+    const [data, setData] = useState<OverplannerCreateEventType | null>(null);
 
     const [metadata, setMetadata] = useState<any>({});
     const handleChangeData = (e: any) => {
@@ -62,8 +61,112 @@ export default function CreateEventPanel(props: Panel) {
 
     const [allDay, setAllDay] = useState(false);
 
+
+    const [calendarAndPeopleOptions, setCalendarAndPeopleOptions] = useState(null);
+
+    const handleCreate = (e: ((event: MouseEvent<HTMLButtonElement, MouseEvent>) => void) | undefined) => {
+
+        if (!data) {
+            return;
+        }
+
+        fetch("/api/events", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                ...data,
+                start: data.start_time ? data.start_time.utc.toISOString() : null,
+                end: data.end_time ? data.end.utc.toISOString() : null,
+                start_time:  null,
+                end_time:  null,
+            }),
+        })
+            .then(async (res) => {
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message ?? `Request failed (${res.status})`);
+                }
+                // router.push('/login')
+// addNewEvent(re)
+console.log(res)
+                toast.success("Event successfully created!")
+                return;
+            })
+            .catch(err => {
+                console.log({
+                    success: false,
+                    err
+                })
+                toast.error("Failed to create event.")
+                setProgress('error')
+            })
+
+        return null;
+    }
+
+
+    useEffect(() => {
+
+        if (!user) {
+            return;
+        }
+
+        setData({
+            start: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
+            end: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
+            start_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
+            end_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
+            start_timezone: user?.home_timezone ?? "",
+            share_with_calendars_and_people: JSON.stringify({
+                "root": {
+                    "children": [
+                        {
+                            "children": [
+                                {
+                                    "trigger": "@",
+                                    "value": user.name,
+                                    "data": {
+                                        ...user,
+                                        "label": user.name,
+                                        "type": "profile"
+                                    },
+                                    "type": "custom-beautifulMention",
+                                    "version": 1
+                                }
+                            ],
+                            "direction": null,
+                            "format": "",
+                            "indent": 0,
+                            "type": "paragraph",
+                            "version": 1,
+                            "textFormat": 0,
+                            "textStyle": ""
+                        }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "root",
+                    "version": 1
+                }
+            })
+        })
+
+    }, [user])
+
+    if (!data) {
+        return (
+            <div className="flex w-full h-full items-center justify-center">
+                <Spinner />
+            </div>
+        )
+    }
+
+
     return (
-        <form className="flex h-full flex-col">
+        <div className="flex h-full flex-col">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
                 <div>
@@ -73,7 +176,7 @@ export default function CreateEventPanel(props: Panel) {
                     </p>
                 </div>
 
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" onClick={handleCreate}>
                     Create
                 </Button>
             </div>
@@ -94,10 +197,10 @@ export default function CreateEventPanel(props: Panel) {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full p-4 border border-white border-dashed rounded-sm">
+                    <div className="flex flex-col gap-4 w-full p-4 border bg-muted/50 rounded-sm">
                         <Label>
                             <CalendarDays className="size-4" />
-                            Date
+                            Date & Time
                         </Label>
 
                         {/* Date */}
@@ -108,7 +211,7 @@ export default function CreateEventPanel(props: Panel) {
                                         type: 'date',
                                         name: 'start',
                                         value: data.start?.print("yyyy-MM-dd"),
-                                        onChange: (e) => { 
+                                        onChange: (e) => {
                                             const utc = fromZonedTime(`${e.target.value}T00:00:00`, data.start_timezone);
                                             handleChangeData({
                                                 target: {
@@ -132,8 +235,16 @@ export default function CreateEventPanel(props: Panel) {
                                             {...{
                                                 type: 'date',
                                                 name: 'end',
-                                                value: data.end?.zoned_time,
-                                                onChange: handleChangeData
+                                                value: data.end?.print("yyyy-MM-dd"),
+                                                onChange: (e) => {
+                                                    const utc = fromZonedTime(`${e.target.value}T00:00:00`, data.start_timezone);
+                                                    handleChangeData({
+                                                        target: {
+                                                            name: 'end',
+                                                            value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
+                                                        }
+                                                    })
+                                                }
                                             }}
                                         />
                                     </div>
@@ -160,18 +271,18 @@ export default function CreateEventPanel(props: Panel) {
                                 </Label>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button 
-                                onClick={e => {
-                                    handleChangeData({
-                                        target: {
-                                            name: 'start',
-                                            value: new OverplannerDate('now', data.start_timezone)
-                                        }
-                                    })
-                                }} 
-                                size={'sm'} 
-                                variant={'outline'} 
-                                disabled={data.start ? data.start?.isSameLocalDate(new OverplannerDate('now', data.start_timezone)) : false}
+                                <Button
+                                    onClick={e => {
+                                        handleChangeData({
+                                            target: {
+                                                name: 'start',
+                                                value: new OverplannerDate('now', data.start_timezone)
+                                            }
+                                        })
+                                    }}
+                                    size={'sm'}
+                                    variant={'outline'}
+                                    disabled={data.start ? data.start?.isSameLocalDate(new OverplannerDate('now', data.start_timezone)) : false}
                                 >Today</Button>
                             </div>
                         </div>
@@ -186,17 +297,28 @@ export default function CreateEventPanel(props: Panel) {
                                     </Label>
 
                                     <Input
-                                        type="time"
-                                        name="start"
-                                        value={data.start?.zoned_time.toString()}
-                                        onChange={(e => {
-                                            handleChangeData({
-                                                target: {
-                                                    name: 'start',
-                                                    value: new Date(e.target.value)
-                                                }
-                                            })
-                                        })}
+                                        {...{
+                                            type: 'time',
+                                            name: 'start_time',
+                                            value: data.start_time?.print("HH:mm") ?? "",
+                                            onChange: (e) => {
+                                                if (!data.start) return;
+
+                                                const localDateTime = `${data.start.print("yyyy-MM-dd")}T${e.target.value}`;
+
+                                                const utc = fromZonedTime(
+                                                    localDateTime,
+                                                    data.start_timezone ?? "UTC"
+                                                );
+
+                                                handleChangeData({
+                                                    target: {
+                                                        name: 'start_time',
+                                                        value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
+                                                    }
+                                                })
+                                            }
+                                        }}
                                     />
                                 </div>
 
@@ -207,17 +329,28 @@ export default function CreateEventPanel(props: Panel) {
                                     </Label>
 
                                     <Input
-                                        type="time"
-                                        name="end"
-                                        value={data.end?.zoned_time.toString()}
-                                        onChange={(e => {
-                                            handleChangeData({
-                                                target: {
-                                                    name: 'end',
-                                                    value: new Date(e.target.value)
-                                                }
-                                            })
-                                        })}
+                                        {...{
+                                            type: 'time',
+                                            name: 'end_time',
+                                            value: data.end_time?.print("HH:mm") ?? "",
+                                            onChange: (e) => {
+                                                if (!data.start) return;
+
+                                                const localDateTime = `${data.start.print("yyyy-MM-dd")}T${e.target.value}`;
+
+                                                const utc = fromZonedTime(
+                                                    localDateTime,
+                                                    data.start_timezone ?? "UTC"
+                                                );
+
+                                                handleChangeData({
+                                                    target: {
+                                                        name: 'end_time',
+                                                        value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
+                                                    }
+                                                })
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -263,24 +396,38 @@ export default function CreateEventPanel(props: Panel) {
                     </div>
 
                     {/* Calendar */}
-                    <div className="space-y-2">
-                        <Label>Calendar</Label>
+                    <div className="flex w-full">
+                        <Field>
+                            <FieldLabel>Calendars & People</FieldLabel>
+                            <FieldContent>
+                                <ComboboxEditor
+                                    {...{
+                                        placeholder: "Calendars & People",
+                                        value: data.share_with_calendars_and_people ?? "",
+                                        name: 'share_with_calendars_and_people',
+                                        onChange: (e => {
+                                            console.log(e)
+                                            handleChangeData({
+                                                target: {
+                                                    name: "share_with_calendars_and_people",
+                                                    value: e.target.value
+                                                }
+                                            })
+                                        }),
+                                        variables: {
+                                            "@": [
+                                                { ...user, value: user?.name, label: user?.name, "type": "profile" },
+                                            ],
+                                            "#": ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"],
+                                            "due:": ["Today", "Tomorrow", "01-01-2023"],
+                                            "rec:": ["week", "month", "year"],
+                                            "\\w+:": [],
+                                        }
 
-                        <Select defaultValue="personal">
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value="personal">
-                                    Personal
-                                </SelectItem>
-
-                                <SelectItem value="work">
-                                    Work
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                                    }}
+                                />
+                            </FieldContent>
+                        </Field>
                     </div>
 
 
@@ -292,13 +439,14 @@ export default function CreateEventPanel(props: Panel) {
                         </Label>
 
                         <Textarea
+                            value={data.description ?? ""}
+                            onChange={handleChangeData}
                             id="description"
                             name="description"
                             placeholder="Add a description..."
                             className="min-h-24 resize-none"
                         />
                     </div>
-
 
                     <p className="debug">{JSON.stringify(data, null, 2)}</p>
 
@@ -310,10 +458,11 @@ export default function CreateEventPanel(props: Panel) {
                 <Button
                     type="submit"
                     className="w-full"
+                    onClick={handleCreate}
                 >
                     Create Event
                 </Button>
             </div>
-        </form>
+        </div>
     );
 }

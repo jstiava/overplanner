@@ -2,13 +2,6 @@
 
 import { useContext, useState } from "react";
 import {
-  User,
-  AtSign,
-  Mail,
-  Calendar,
-  Globe,
-  Camera,
-  Lock,
   Save,
   ArrowLeft,
   UserIcon,
@@ -16,26 +9,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import { ResizablePanel } from "@/components/ui/resizable";
 import { OverplannerSessionContext } from "@/components/OverplannerSessionContext";
 import { useRouter } from "next/navigation";
-import { TimezoneSelect } from "@/components/creating/TimezoneSelect";
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import RenderFormFields from "@/components/formFields/RenderFormFields";
 import { TimezoneList } from "@/components/TimezoneList";
 import { toast } from "sonner";

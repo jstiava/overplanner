@@ -30,6 +30,10 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
         )
     }
 
+    const eventsForUser = await EventsService.getCalendarsForUser({
+        user_id: user.id
+    })
+
     return (
         <ThemeProvider
             attribute="class"
@@ -38,7 +42,8 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
             <OverplannerSessionContextComponent
                 {...{
                     user,
-                    session: null
+                    session: null,
+                    events: eventsForUser
                 }}
             >
                 <div className="flex w-screen h-screen p-0">

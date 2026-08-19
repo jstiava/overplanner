@@ -61,7 +61,7 @@ export const MenuItem = forwardRef<
     {...props}
   >
     {itemValue}
-    <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+    <DropdownMenuShortcut></DropdownMenuShortcut>
   </Button>
 
 ));

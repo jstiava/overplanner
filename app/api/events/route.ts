@@ -3,9 +3,10 @@ import { Certificates, Events, OverplannerEventType, POSTGRES_ERROR_CODES } from
 import { and, eq, gte, lt } from 'drizzle-orm';
 import Drizzle from '@/lib/drizzle';
 import { generateEventId } from '@/lib/generate_id';
-import { getNewCertificateTemplate, getNewEventTemplate } from '@/lib/events';
+import { generateUUID, getNewCertificateTemplate, getNewEventTemplate } from '@/lib/events';
 import { cookies } from 'next/headers';
 import getSessionUser from '@/lib/getUser';
+import { EventsService } from '@/lib/events/EventsService';
 
 export type Stub = {
     id: string,
@@ -18,12 +19,7 @@ export type Stub = {
  * How the inbound data differs from how its stored.
  */
 export type EventToCreateType = OverplannerEventType & {
-    date: {
-        from: Date,
-        to: Date,
-        timezone: string
-    },
-    share_with: Stub[],
+    share_with_calendars_and_people: string,
 }
 
 
@@ -45,24 +41,18 @@ export async function POST(req: NextRequest) {
             );
         }
 
-
-
-        const { name, type, date, location_details, share_with, ...rest } = body 
-
-
-
+        const { name, type, start, end, start_time, end_time, location_details, ...rest } = body
         const initialEventRow = getNewEventTemplate();
-
         const eventRow = {
             ...initialEventRow,
             name,
             type,
 
-            start: date.from ? new Date(date.from) : null,
-            start_timezone: date.timezone,
+            start: start ? new Date(start) : null,
+            start_timezone: rest.start_timezone,
 
-            end: date.to ? new Date(date.to) : null,
-            end_timezone: date.timezone,
+            end: end ? new Date(end) : null,
+            end_timezone: rest.end_timezone ?? rest.start_timezone,
 
             location_details: null,
 
@@ -77,7 +67,7 @@ export async function POST(req: NextRequest) {
             version: 0,
         }
 
-        eventRow['id'] = generateEventId(eventRow as any)
+        eventRow['id'] = generateUUID()
 
 
         const inserted = await drizzle.db.insert(Events)
@@ -86,30 +76,49 @@ export async function POST(req: NextRequest) {
 
 
         const newCerts = []
-        for (const sharedWithTarget of share_with) {
-            newCerts.push({
-                ...getNewCertificateTemplate(),
-                child_event_id: eventRow['id'],
-                event_id: sharedWithTarget.id
-            })
-            
+
+        const mentions = JSON.parse(rest.share_with_calendars_and_people).root.children
+            .flatMap((paragraph: any) => paragraph.children)
+            .filter((node: any) => node.type === "custom-beautifulMention")
+            .map((node: any) => node.data);
+
+        for (const mention of mentions) {
+
+            if (mention.type == 'profile') {
+                newCerts.push({
+                    ...getNewCertificateTemplate(),
+                    child_event_id: eventRow['id'],
+                    user_id: mention.id
+                })
+            }
+            else if (mention.type === 'event') {
+                newCerts.push({
+                    ...getNewCertificateTemplate(),
+                    child_event_id: eventRow['id'],
+                    event_id: mention.id
+                })
+            }
         }
+
+
         const inserted_cert = await drizzle.db.insert(Certificates)
-            .values(newCerts)
+            .values(newCerts);
+
+
+        const newlyCreatedEvent = await EventsService.getEventWithUserCertificate(eventRow.id, theUser.id);
 
 
         return NextResponse.json({
             success: true,
             message: "Request successful",
             data: {
-                newEvent: inserted[0],
-                inserted_cert,
+                newEvent: newlyCreatedEvent,
                 index: 0,
                 type: "member",
                 role: null,
                 notes: "Still in development"
             }
-        });
+        })
 
     }
     catch (err) {
@@ -121,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     }
 
-}
+};
 
 
 export async function GET(req: NextRequest) {

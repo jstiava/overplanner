@@ -58,6 +58,10 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
 
     const targetDate = new OverplannerDate("now", calendarWithCertificate.start_timezone);
 
+    const eventsForUser = await EventsService.getCalendarsForUser({
+        user_id: user.id
+    })
+
 
     return (
         <ThemeProvider
@@ -67,7 +71,8 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
             <OverplannerSessionContextComponent
                 {...{
                     user,
-                    session: null
+                    session: null,
+                    events: eventsForUser
                 }}
             >
                 <OverplannerCalendarContextComponent
@@ -79,7 +84,7 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
                         orientation="horizontal"
                         className="rounded-lg border w-full"
                     >
-                        <ResizablePanel  id="sidebar" defaultSize="25%" minSize={"14em"} maxSize={"400px"} collapsible={true} collapsedSize={0} className="h-full">
+                        <ResizablePanel id="sidebar" defaultSize="25%" minSize={"14em"} maxSize={"400px"} collapsible={true} collapsedSize={0} className="h-full">
                             {props.children}
                         </ResizablePanel>
                         <ResizablePanel defaultSize="75%">

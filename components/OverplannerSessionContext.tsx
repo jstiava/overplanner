@@ -28,7 +28,9 @@ export const OverplannerSessionContext = createContext<{
     panels: Panel[],
     setPanels: Dispatch<SetStateAction<Panel[]>> | null,
     addPanel: ((props?: PanelCreationProps) => any) | null,
-    removePanel: ((id: string) => any) | null
+    removePanel: ((id: string) => any) | null,
+    events: OverplannerEventViewType[] | null,
+    addNewEvent: ((newEvent: OverplannerEventViewType) => any) | null
 }>({
     now: null,
     user: null,
@@ -43,18 +45,22 @@ export const OverplannerSessionContext = createContext<{
     setPanels: null,
     addPanel: null,
     removePanel: null,
+    events: null,
+    addNewEvent: null
 });
 
 export default function OverplannerSessionContextComponent(props: {
     user: OverplannerUserPublicType | null,
     session: OverplannerSessionType | null,
-    children: JSX.Element
+    children: JSX.Element,
+    events: OverplannerEventViewType[]
 }) {
 
     const date = new Date();
     const [focusedDate, setFocusedDate] = useState<OverplannerDate | null>(new OverplannerDate(date, props.user?.home_timezone ?? 'utc'));
     const [isDark, setIsDark] = useState(() => props.user?.is_dark ?? false)
     const [calendar, setCalendar] = useState<OverplannerEventViewType | null>(null);
+    const [events, setEvents] = useState(props.events)
 
     const toggleDarkMode = () => {
         setIsDark(prev => !prev);
@@ -84,6 +90,10 @@ export default function OverplannerSessionContextComponent(props: {
         });
     };
 
+    const addNewEvent = (newEvent: OverplannerEventViewType) => {
+        return;
+    }
+
     const value = useMemo(
         () => ({
             now: date,
@@ -96,7 +106,9 @@ export default function OverplannerSessionContextComponent(props: {
             panels,
             addPanel,
             setPanels,
-            removePanel
+            removePanel,
+            events,
+            addNewEvent
         }),
         [date, props.user, props.session, isDark, focusedDate, panels, toggleDarkMode, calendar]
     );
