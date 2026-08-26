@@ -11,6 +11,7 @@ import CommandFormField from "./Command";
 import { ComboboxInputFormField, HorizontalInputFormField, InputField, InputFormField } from "./Input";
 import { CardFormField } from "@/components/formFields/Card";
 import { CustomFormField } from "@/components/formFields/Custom";
+import SwitchFormField from "@/components/formFields/Switch";
 
 export type FormFieldProps<A = BaseField> = {
     props: A,
@@ -43,7 +44,8 @@ const FORM_FIELDS: Record<string, any> = {
     'horizontal_input': HorizontalInputFormField,
     'textarea': TextAreaFormField,
     'column': ColumnFormField,
-    'command': CommandFormField
+    'command': CommandFormField,
+    'switch': SwitchFormField
 }
 
 export default function RenderFormFields({
@@ -61,8 +63,8 @@ export default function RenderFormFields({
 
     return (
         <>
-            {schema.map(item => {
-                return <RenderFormField key={item.field} props={item} data={data} setData={setData} handleChangeData={handleChangeData} />
+            {schema.map((item, index) => {
+                return <RenderFormField key={`${item.field}_${index}`} props={item} data={data} setData={setData} handleChangeData={handleChangeData} />
             })}
         </>
     )

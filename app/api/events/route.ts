@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { name, type, start, end, start_time, end_time, location_details, ...rest } = body
+        const { name, type, start, end, start_time, end_time, location_details, color,  ...rest } = body
         const initialEventRow = getNewEventTemplate();
         const eventRow = {
             ...initialEventRow,
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
 
             last_updated_at: new Date(),
             last_updated_with: 'api',
+            color,
 
             version: 0,
         }
@@ -112,7 +113,11 @@ export async function POST(req: NextRequest) {
             success: true,
             message: "Request successful",
             data: {
-                newEvent: newlyCreatedEvent,
+                newEvent: {
+                    ...newlyCreatedEvent,
+                    start: newlyCreatedEvent.start ? new Date(newlyCreatedEvent.start) : null,
+                    end: newlyCreatedEvent.end ? new Date(newlyCreatedEvent.end) : null
+                },
                 index: 0,
                 type: "member",
                 role: null,

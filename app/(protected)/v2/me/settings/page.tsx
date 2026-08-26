@@ -16,6 +16,8 @@ import RenderFormFields from "@/components/formFields/RenderFormFields";
 import { TimezoneList } from "@/components/TimezoneList";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
+import { ColorList } from "@/components/ColorList";
+import { ColorListV2 } from "@/components/ColorListV2";
 
 const PROFILE_SETTINGS_FORM_ITEMS = [
   {
@@ -63,16 +65,41 @@ const PROFILE_SETTINGS_FORM_ITEMS = [
       {
         type: 'custom',
         Component: TimezoneList,
-        name: 'preferred_timezones'
+        name: 'preferred_timezones',
+        field: "preferred_timezones"
+      },
+
+    ]
+  },
+  {
+    title: 'Esthetics',
+    type: 'card',
+    description: 'Manage the styling and colors within the calendar.',
+    children: [
+      {
+        type: 'switch',
+        name: "Dark Mode",
+        description: "Defaults to dark mode on desktop and mobile.",
+
+      },
+      {
+        type: 'custom',
+        Component: ColorListV2,
+        name: "colors",
+        field: "colors"
       }
     ]
   },
+
+
 ]
 
 
 export default function ProfileSettingsPage() {
 
   const router = useRouter();
+
+  const [isChanged, setIsChanged ]  = useState(false);
   const [progress, setProgress] = useState<'creating' | 'submitting' | 'error' | 'done'>('creating');
 
 
@@ -81,7 +108,7 @@ export default function ProfileSettingsPage() {
   const [data, setData] = useState<any>(user)
   const [metadata, setMetadata] = useState<any>({});
   const handleChangeData = (e: any) => {
-
+    setIsChanged(true)
     setData((prev: any) => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -103,6 +130,8 @@ export default function ProfileSettingsPage() {
           throw new Error(error.message ?? `Request failed (${res.status})`);
         }
         // router.push('/login')
+        setProgress('done')
+        setIsChanged(false)
         toast.success("Profile successfully updated!")
         return;
       })
@@ -112,7 +141,7 @@ export default function ProfileSettingsPage() {
           err
         })
         toast.error("Failed to login")
-        setProgress('error') 
+        setProgress('error')
       })
 
     return;
@@ -164,7 +193,7 @@ export default function ProfileSettingsPage() {
                 Cancel
               </Button>
 
-              <Button onClick={handleSave}>
+              <Button disabled={!isChanged} onClick={handleSave}>
                 {progress === "submitting" ? (
                   <Spinner className="mr-2 h-4 w-4" />
                 ) : (
@@ -175,6 +204,7 @@ export default function ProfileSettingsPage() {
               </Button>
             </div>
           </div>
+
         </div>
       </main>
     </ResizablePanel>

@@ -35,7 +35,7 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
             <div className="flex items-center justify-center w-full h-full">
                 <p className="text-[grey]">Something went wrong.</p>
             </div>
-        )
+        ) 
     }
 
     const calendarWithCertificate = await EventsService.getEventWithUserCertificate(params.calendar, user.id);

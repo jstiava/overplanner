@@ -43,7 +43,7 @@ export default async function ProtectedPageServerLayout(props: ProtectedCalendar
                 {...{
                     user,
                     session: null,
-                    events: eventsForUser
+                    events: eventsForUser as any
                 }}
             >
                 <div className="flex w-screen h-screen p-0">

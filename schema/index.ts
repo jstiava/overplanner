@@ -52,6 +52,11 @@ type EventTheme = {
     borderRadius: number;
 };
 
+export type ColorItem = {
+    name: string;
+    value: string;
+};
+
 type EventTypesType = "calendar" | "pair" | "all_day" | "single_all_day" | "all_month" | "single_time" | "todo" | "select" | "booking_space" | "select_modifier"
 
 export const Events = pgTable('events', {
@@ -145,6 +150,7 @@ export const Users = pgTable("users", {
     is_dark: boolean().default(false).notNull(),
     icon_img_uri: varchar({ length: 255 }),
     preferred_timezones: text("preferred_timezones").array(),
+    colors: jsonb("colors").$type<ColorItem[]>(),
 })
 
 export const Sessions = pgTable("session", {

@@ -5,7 +5,7 @@ import { OverplannerEventViewType, OverplannerUserPublicType } from "@/schema"
 import { useContext, useEffect, useState } from "react";
 import { _getHoursInADayAsNumberArray } from "@/lib/DateTime/helpers";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import {OverplannerCalendarContext} from "@/components/OverplannerCalendarContext";
+import { OverplannerCalendarContext } from "@/components/OverplannerCalendarContext";
 import CalendarDayViewSingleDaySlide from "@/components/CalendarDayViewSingleDaySlide";
 import { OverplannerSessionContext } from "@/components/OverplannerSessionContext";
 
@@ -125,8 +125,16 @@ export default function CalendarDayVirtualCarousel(props: {
             setApi={setApi}
             opts={{
                 loop: false,
+                watchDrag: (emblaApi, event) => {
+                    const target = event.target as HTMLElement;
+                    if (target.closest("[data-no-carousel-drag]")) {
+                        return false;
+                    }
+                    return true;
+                },
             }}
             className="carousel relative w-full z-0 h-full p-0 "
+
 
         >
             <CarouselContent className="flex carousel_content h-full">
@@ -136,13 +144,25 @@ export default function CalendarDayVirtualCarousel(props: {
                         <CalendarDayViewSingleDaySlide {...{
                             date: date,
                             events: props.events.filter(x => {
-                                if (x.type == 'single_time') {
-                                    const zonedStart = new OverplannerDate(x.start, x.start_timezone);
+
+                                try {
+                                    // TODO - not specific enough
+                                    if (!x.start) {
+                                        return false;
+                                    }
+                                    const zonedStart = new OverplannerDate(new Date(x.start), user.home_timezone);
                                     if (zonedStart.isSameLocalDate(date)) {
                                         return true;
                                     }
+                                    return false;
                                 }
-                                return false;
+                                catch (err) {
+                                    console.log({
+                                        err,
+                                        x
+                                    })
+                                    return false;
+                                }
                             })
                         }} />
                     </CarouselItem>

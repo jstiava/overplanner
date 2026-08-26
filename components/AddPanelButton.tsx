@@ -28,7 +28,7 @@ const PANEL_OPTIONS = [
         type: "create-event",
         title: "Create New Event",
         description: "Create a new calendar event",
-        icon: Plus,
+        icon: Plus, 
     },
     {
         type: "day-view",
@@ -47,37 +47,25 @@ const PANEL_OPTIONS = [
         title: "Month View",
         description: "View your calendar by month",
         icon: Calendar,
-    },
-    {
-        type: "preview",
-        title: "Preview",
-        description: "Preview an event or calendar item",
-        icon: Eye,
-    },
-    {
-        type: "edit",
-        title: "Edit",
-        description: "Edit an event or calendar item",
-        icon: Pencil,
-    },
-    {
-        type: "table",
-        title: "Table",
-        description: "View calendar data as a table",
-        icon: Table,
-    },
-    {
-        type: "conversation",
-        title: "Conversation",
-        description: "Discuss and collaborate",
-        icon: MessageSquare,
-    },
-    {
-        type: "blank",
-        title: "Blank",
-        description: "Free space",
-        icon: PackageIcon,
-    },
+    }, 
+    // {
+    //     type: "table",
+    //     title: "Table",
+    //     description: "View calendar data as a table",
+    //     icon: Table,
+    // },
+    // {
+    //     type: "conversation",
+    //     title: "Conversation",
+    //     description: "Discuss and collaborate",
+    //     icon: MessageSquare,
+    // },
+    // {
+    //     type: "preview",
+    //     title: "Preview",
+    //     description: "Free space",
+    //     icon: PackageIcon,
+    // },
 ] as const;
 
 

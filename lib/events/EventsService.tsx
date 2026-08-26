@@ -156,7 +156,10 @@ export class EventsService {
             .from(Certificates)
             .leftJoin(Events, eq(Events.id, Certificates.child_event_id))
             .where(
-                eq(Certificates.user_id, user_id)
+                and(
+                    eq(Certificates.user_id, user_id),
+                    isNotNull(Events.id)
+                )
             )
             .orderBy(Events.start);
 
@@ -267,39 +270,17 @@ export class EventsService {
     }
 
 
-}
 
 
+    static async getCalendars({
+        calendar
+    }: {
+        calendar: string
+    }): Promise<OverplannerEventViewType[]> {
 
+        const drizzle = await Drizzle.getInstance();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export async function getCalendars({
-    calendar
-}: {
-    calendar: string
-}): Promise<OverplannerEventViewType[]> {
-
-    const drizzle = await Drizzle.getInstance();
-
-    const twoLevelEventLookup = sql`
+        const twoLevelEventLookup = sql`
     WITH RECURSIVE graph AS (
         SELECT
             m.id,
@@ -332,15 +313,35 @@ export async function getCalendars({
     JOIN certificates c ON c.event_id = g.event_id AND c.child_event_id = g.child_event_id;
     `
 
-    const result = await drizzle.db.execute(twoLevelEventLookup as any);
+        const result = await drizzle.db.execute(twoLevelEventLookup as any);
 
-    return result.rows.map(x => ({
-        ...x,
-        start: x.start ? new Date(x.start) : null,
-        end: x.end ? new Date(x.end) : null,
-    })) as any
+        return result.rows 
+
+    }
+
+
+
+
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

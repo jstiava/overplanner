@@ -17,46 +17,92 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OverplannerSessionContext, Panel } from "@/components/OverplannerSessionContext";
 import { TimezoneSelect } from "@/components/creating/TimezoneSelect";
 import OverplannerDate from "@/lib/DateTime/OverplannerDate";
-import { OverplannerEventType } from "@/schema";
+import { ColorItem, OverplannerEventType, OverplannerEventViewType } from "@/schema";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { fromZonedTime } from "date-fns-tz";
 import ComboboxEditor from "@/components/editor/ComboboxEditor";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
+import { ColorSelector } from "@/components/ColorSelector";
+import EventTypeSelect from "@/components/EventTypeSelect";
+import { EVENT_TYPE_EDITOR_TEMPLATES } from "@/components/event_types/EventTypeEditorTemplates";
+import { OverplannerPanelContext } from "@/components/ResizableDraggablePanel";
+import useDataStoreState from "@/components/useDataStoreState";
+import { COLORS_GOOGLE_CALENDAR_CLASSIC } from "@/components/ColorListV2";
+import LocationField from "@/components/LocationField";
+import { FileDropArea } from "@/components/FileDropArea";
+import { UploadFilesToUploadThing } from "@/lib/uploadthing/UploadThingServerActions";
 
 export type OverplannerCreateEventType = Partial<Omit<OverplannerEventType, "start" | "end" | "start_time" | "end_time"> & {
     start_time: OverplannerDate | null,
     end_time: OverplannerDate | null,
     start: OverplannerDate | null,
     end: OverplannerDate | null,
-    share_with_calendars_and_people: any | null
-}>
+    share_with_calendars_and_people: any | null,
+    color: ColorItem | null
+}>;
+
+
+const DEBUG_FLAG = true;
+
+const DEFAULT_COLORS = COLORS_GOOGLE_CALENDAR_CLASSIC
 
 export default function CreateEventPanel(props: Panel) {
 
+
+
     const [progress, setProgress] = useState<'creating' | 'submitting' | 'error' | 'done'>('creating');
-    const { now, user, addNewEvent } = useContext(OverplannerSessionContext)
+    const { now, user, addNewEvent } = useContext(OverplannerSessionContext);
+    const { props: panelProps, setProps } = useContext(OverplannerPanelContext);
 
-    const [data, setData] = useState<OverplannerCreateEventType | null>(null);
+    const { data, metadata, handleChangeData, handleChangeMetadata, handleMultiChangeData, handleMultiChangeMetadata, setData, setMetadata } = useDataStoreState<OverplannerCreateEventType | null>(null);
 
-    const [metadata, setMetadata] = useState<any>({});
-    const handleChangeData = (e: any) => {
+    const handleTypeChange = (newEventType: string | null) => {
 
-        setData((prev: any) => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }))
+        if (!newEventType || !data) {
+            return;
+        }
+
+        if (newEventType === 'single_time') {
+            const start = data.start ?? new OverplannerDate('now', data.start_timezone);
+            handleMultiChangeData({
+                start,
+                end: start,
+                type: "single_time"
+            })
+            handleMultiChangeMetadata({
+                end: metadata.start
+            })
+            return;
+        }
+        else if (newEventType === 'all_day') {
+            const start = data.start ?? new OverplannerDate('now', data.start_timezone);
+            const end = data.end ?? start;
+            handleMultiChangeData({
+                // end: data.start,
+                start: start,
+                end: end,
+                start_time: null,
+                end_time: null,
+                type: "all_day"
+            })
+        }
+        else if (newEventType == 'calendar') {
+            handleMultiChangeData({
+                // end: data.start,
+                type: "calendar",
+                start: null,
+                end: null,
+                start_time: null,
+                end_time: null
+            })
+        }
+
+        return;
     }
 
     const [allDay, setAllDay] = useState(false);
@@ -77,10 +123,11 @@ export default function CreateEventPanel(props: Panel) {
             },
             body: JSON.stringify({
                 ...data,
-                start: data.start_time ? data.start_time.utc.toISOString() : null,
-                end: data.end_time ? data.end.utc.toISOString() : null,
-                start_time:  null,
-                end_time:  null,
+                start: data.start && data.start.utc.toISOString(),
+                end: data.end && data.end.utc.toISOString(),
+                start_time: null,
+                end_time: null,
+                color: data.color ? data.color.value : null
             }),
         })
             .then(async (res) => {
@@ -89,8 +136,15 @@ export default function CreateEventPanel(props: Panel) {
                     throw new Error(error.message ?? `Request failed (${res.status})`);
                 }
                 // router.push('/login')
-// addNewEvent(re)
-console.log(res)
+                // addNewEvent(re)
+                console.log(res);
+
+                const data = await res.json();
+
+                if (addNewEvent) {
+                    addNewEvent(data.data.newEvent)
+                }
+
                 toast.success("Event successfully created!")
                 return;
             })
@@ -113,12 +167,13 @@ console.log(res)
             return;
         }
 
-        setData({
+        const initialValues = {
+            type: props.type ?? 'single_time',
             start: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
             end: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-            start_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
-            end_time: new OverplannerDate(new Date(), user?.home_timezone ?? 'utc')._zeroOutSeconds(),
             start_timezone: user?.home_timezone ?? "",
+            end_timezone: user?.home_timezone ?? "",
+            color: user.colors && user.colors.length > 0 ? user.colors[0] : DEFAULT_COLORS[0],
             share_with_calendars_and_people: JSON.stringify({
                 "root": {
                     "children": [
@@ -151,10 +206,20 @@ console.log(res)
                     "type": "root",
                     "version": 1
                 }
-            })
+            }),
+            ...(panelProps.event ?? {})
+        } as Partial<OverplannerCreateEventType>
+
+        setMetadata({
+            start: initialValues.start,
+            start_time: initialValues.start.print("HH:mm"),
+            end: initialValues.start._zeroOutSeconds(),
+            end_time: initialValues.start.add(60, 'minutes').print("HH:mm"),
         })
 
-    }, [user])
+        setData(initialValues)
+
+    }, [user, panelProps])
 
     if (!data) {
         return (
@@ -163,7 +228,6 @@ console.log(res)
             </div>
         )
     }
-
 
     return (
         <div className="flex h-full flex-col">
@@ -185,6 +249,18 @@ console.log(res)
             <div className="flex-1 overflow-auto">
                 <div className="space-y-5 p-4">
 
+
+                    <FileDropArea
+                        {...{
+                            onFileSelect: async (file) => {
+                                const uploaded = await UploadFilesToUploadThing(file)
+                            },
+                            accept: 'jpg, png',
+                            className: 'border-1 h-fit py-6 text-xs'
+                        }}
+                    />
+
+
                     {/* Title */}
                     <div className="space-y-2">
                         <Label htmlFor="title">Title</Label>
@@ -197,202 +273,46 @@ console.log(res)
                         />
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full p-4 border bg-muted/50 rounded-sm">
-                        <Label>
-                            <CalendarDays className="size-4" />
-                            Date & Time
-                        </Label>
+                    <EventTypeSelect
+                        value={data.type as any}
+                        onChange={handleTypeChange}
+                    />
 
-                        {/* Date */}
-                        <div className="flex items-end gap-2">
-                            <div className="min-w-0 flex-1">
-                                <Input
-                                    {...{
-                                        type: 'date',
-                                        name: 'start',
-                                        value: data.start?.print("yyyy-MM-dd"),
-                                        onChange: (e) => {
-                                            const utc = fromZonedTime(`${e.target.value}T00:00:00`, data.start_timezone);
-                                            handleChangeData({
-                                                target: {
-                                                    name: 'start',
-                                                    value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
-                                                }
-                                            })
-                                        }
-                                    }}
-                                />
-                            </div>
 
-                            {allDay && (
-                                <>
-                                    <span className="pb-2 text-sm text-muted-foreground">
-                                        to
-                                    </span>
+                    {EVENT_TYPE_EDITOR_TEMPLATES.map(Module => {
 
-                                    <div className="min-w-0 flex-1">
-                                        <Input
-                                            {...{
-                                                type: 'date',
-                                                name: 'end',
-                                                value: data.end?.print("yyyy-MM-dd"),
-                                                onChange: (e) => {
-                                                    const utc = fromZonedTime(`${e.target.value}T00:00:00`, data.start_timezone);
-                                                    handleChangeData({
-                                                        target: {
-                                                            name: 'end',
-                                                            value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
-                                                        }
-                                                    })
-                                                }
-                                            }}
-                                        />
+                        if (Module.value != data.type) {
+                            return null;
+                        }
+
+                        return (
+                            <div className="flex w-full h-fit" key={Module.value}>
+                                {Module.Interface ? (
+                                    <Module.Interface
+                                        {...{
+                                            data, metadata, handleChangeData, handleChangeMetadata, handleMultiChangeData, handleMultiChangeMetadata
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="flex p-2 border rounded-sm w-full" key={Module.value}>
+                                        <p className="w-full p-3 opacity-50 text-xs text-center">No date & time configration.</p>
                                     </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* All day */}
-                        <div className="flex w-full items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    id="all-day"
-                                    checked={allDay}
-                                    onCheckedChange={(value) =>
-                                        setAllDay(value === true)
-                                    }
-                                />
-
-                                <Label
-                                    htmlFor="all-day"
-                                    className="font-normal"
-                                >
-                                    All day
-                                </Label>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    onClick={e => {
-                                        handleChangeData({
-                                            target: {
-                                                name: 'start',
-                                                value: new OverplannerDate('now', data.start_timezone)
-                                            }
-                                        })
-                                    }}
-                                    size={'sm'}
-                                    variant={'outline'}
-                                    disabled={data.start ? data.start?.isSameLocalDate(new OverplannerDate('now', data.start_timezone)) : false}
-                                >Today</Button>
-                            </div>
-                        </div>
+                        )
+                    })}
 
-                        {/* Time */}
-                        {!allDay && (
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label>
-                                        <Clock className="size-4" />
-                                        Start
-                                    </Label>
 
-                                    <Input
-                                        {...{
-                                            type: 'time',
-                                            name: 'start_time',
-                                            value: data.start_time?.print("HH:mm") ?? "",
-                                            onChange: (e) => {
-                                                if (!data.start) return;
-
-                                                const localDateTime = `${data.start.print("yyyy-MM-dd")}T${e.target.value}`;
-
-                                                const utc = fromZonedTime(
-                                                    localDateTime,
-                                                    data.start_timezone ?? "UTC"
-                                                );
-
-                                                handleChangeData({
-                                                    target: {
-                                                        name: 'start_time',
-                                                        value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
-                                                    }
-                                                })
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>
-                                        <Clock className="size-4" />
-                                        End
-                                    </Label>
-
-                                    <Input
-                                        {...{
-                                            type: 'time',
-                                            name: 'end_time',
-                                            value: data.end_time?.print("HH:mm") ?? "",
-                                            onChange: (e) => {
-                                                if (!data.start) return;
-
-                                                const localDateTime = `${data.start.print("yyyy-MM-dd")}T${e.target.value}`;
-
-                                                const utc = fromZonedTime(
-                                                    localDateTime,
-                                                    data.start_timezone ?? "UTC"
-                                                );
-
-                                                handleChangeData({
-                                                    target: {
-                                                        name: 'end_time',
-                                                        value: new OverplannerDate(utc, data.start_timezone ?? 'UTC')
-                                                    }
-                                                })
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Timezone */}
-                        <div className="w-full">
-                            <Field>
-                                <FieldLabel>Timezone</FieldLabel>
-
-                                <FieldContent className="w-full">
-                                    <Select
-                                        value={data.start_timezone}
-                                        onValueChange={(value) => {
-                                            handleChangeData({
-                                                target: {
-                                                    name: "start_timezone",
-                                                    value,
-                                                },
-                                            });
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <Globe className="size-4 text-muted-foreground" />
-
-                                            <SelectValue placeholder="Select timezone" />
-                                        </SelectTrigger>
-
-                                        <SelectContent>
-                                            {user?.preferred_timezones?.map((timezone) => (
-                                                <SelectItem
-                                                    key={timezone}
-                                                    value={timezone}
-                                                >
-                                                    {timezone}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </FieldContent>
-                            </Field>
-                        </div>
+                    {/* Location */}
+                    <div className="flex w-full">
+                        <LocationField {...{
+                            selected: data.location_details,
+                            onSelect: (newPlace) => {
+                                handleMultiChangeData({
+                                    location_details: newPlace,
+                                })
+                            }
+                        }} />
                     </div>
 
                     {/* Calendar */}
@@ -431,6 +351,27 @@ console.log(res)
                     </div>
 
 
+
+                    <div className="flex w-full">
+                        <Field>
+                            <FieldLabel>Color</FieldLabel>
+                            <FieldContent>
+                                <ColorSelector
+                                    colors={user?.colors ?? DEFAULT_COLORS}
+                                    value={data.color ?? ""}
+                                    onChange={(newColor => {
+                                        handleChangeData({
+                                            target: {
+                                                name: 'color',
+                                                value: newColor
+                                            }
+                                        })
+                                    })} />
+                            </FieldContent>
+                        </Field>
+                    </div>
+
+
                     {/* Description */}
                     <div className="space-y-2">
                         <Label htmlFor="description">
@@ -448,7 +389,10 @@ console.log(res)
                         />
                     </div>
 
-                    <p className="debug">{JSON.stringify(data, null, 2)}</p>
+                    {DEBUG_FLAG && <p className="debug">{JSON.stringify({
+                        data,
+                        metadata
+                    }, null, 2)}</p>}
 
                 </div>
             </div>

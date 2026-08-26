@@ -20,6 +20,10 @@ export default class OverplannerDate {
     zoned_time!: Date;
     timezone!: string;
 
+    writeAndConvertTimeZoneToUtc() {
+        this.utc = fromZonedTime(this.zoned_time, this.timezone);
+    }
+
     writeAndConvertUtcToTimedZone() {
         this.zoned_time = toZonedTime(this.utc, this.timezone);
     }
@@ -95,11 +99,19 @@ export default class OverplannerDate {
             throw new Error("Error while creating Overplanner object.")
         }
 
+        console.log({
+            message: "Could not build OverplannerDate object",
+            args: {
+                target,
+                timezone,
+                format
+            }
+        })
         throw new Error("Could not build OverplannerDate object.")
     }
 
     _isSameTimezone(target: OverplannerDate) {
-        return target.timezone != this.timezone
+        return target.timezone == this.timezone
     }
 
     valueOf() {
@@ -127,6 +139,20 @@ export default class OverplannerDate {
             toZonedTime(this.utc, this.timezone),
             toZonedTime(target.utc, this.timezone)
         )
+    }
+
+    isSameOrAfterLocalDate(target: OverplannerDate) {
+        return isAfter(
+            toZonedTime(target.utc, this.timezone),
+            toZonedTime(this.utc, this.timezone),
+        ) || this.isSameLocalDate(target)
+    }
+
+    isSameOrBeforeLocalDate(target: OverplannerDate) {
+        return isBefore(
+            toZonedTime(target.utc, this.timezone),
+            toZonedTime(this.utc, this.timezone),
+        ) || this.isSameLocalDate(target)
     }
 
     isSameLocalMonth(target: OverplannerDate) {
@@ -168,6 +194,13 @@ export default class OverplannerDate {
         );
     }
 
+    toMidnight() {
+        const newZoned = new Date(this.zoned_time);
+        newZoned.setHours(0, 0, 0, 0);
+        const newUtc = fromZonedTime(newZoned, this.timezone);
+        return new OverplannerDate(newUtc, this.timezone);
+    }
+
     minus(target: OverplannerDate) {
         return (this.utc.getTime() - target.utc.getTime());
     }
@@ -176,7 +209,19 @@ export default class OverplannerDate {
         return new OverplannerDate(this.utc, this.timezone)
     }
 
-    add(amount: number, unit: 'days' | 'weeks' | 'months' | 'hours' | 'minutes') {
+    getDateWith(target: OverplannerDate) {
+        const result = new Date(target.utc);
+
+        result.setFullYear(
+            this.utc.getFullYear(),
+            this.utc.getMonth(),
+            this.utc.getDate()
+        );
+
+        return result;
+    }
+
+    add(amount: number, unit: 'days' | 'weeks' | 'months' | 'minutes') {
         if (unit == 'days') {
             return this._addDays(amount);
         }
@@ -212,6 +257,8 @@ export default class OverplannerDate {
     _zeroOutSeconds() {
         return new OverplannerDate(fromZonedTime(new Date(this.utc.setSeconds(0, 0)), this.timezone), this.timezone);
     }
+
+    
 
 
     getStartOf(unit: 'day' | 'week' | 'month') {

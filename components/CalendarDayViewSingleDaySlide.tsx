@@ -13,6 +13,10 @@ import { OverplannerSessionContext } from "@/components/OverplannerSessionContex
 import { OverplannerCalendarContext } from "@/components/OverplannerCalendarContext";
 import CalendarDayVerticalTimeListV2 from "@/components/CalendarDayVerticalTimeListV2";
 import RenderEventsInDayViewVerticalTimeList from "@/components/RenderEventsInDayViewVirtualTimeList";
+import SmallEventBlock from "@/components/events/SmallEventBlock";
+import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { OverplannerPanelContext } from "@/components/ResizableDraggablePanel";
 
 
 export default function CalendarDayViewSingleDaySlide(props: {
@@ -21,8 +25,61 @@ export default function CalendarDayViewSingleDaySlide(props: {
 }) {
 
     const containerRef = useRef(null);
-    const { now, user, setFocusedDate } = useContext(OverplannerSessionContext)
-    const { calendar } = useContext(OverplannerCalendarContext);
+    const { now, user, setFocusedDate } = useContext(OverplannerSessionContext) 
+
+    const [localEvents, setLocalEvents] = useState(props.events ?? []);
+
+    useEffect(() => {
+
+        setLocalEvents(props.events ?? [])
+
+    }, [props.events])
+
+    const updateColors = (
+        next: any[]
+    ) => {
+        setLocalEvents(next);
+
+        // onChange(
+        //     next.map(({ id, ...color }) => color)
+        // );
+    };
+
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const oldIndex = localEvents.findIndex(
+            (item) => item.id === active.id
+        );
+
+        const newIndex = localEvents.findIndex(
+            (item) => item.id === over.id
+        );
+
+        if (
+            oldIndex === -1 ||
+            newIndex === -1
+        ) {
+            return;
+        }
+
+        updateColors(
+            arrayMove(localEvents, oldIndex, newIndex)
+        );
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        })
+    );
 
     if (!now) {
 
@@ -31,6 +88,10 @@ export default function CalendarDayViewSingleDaySlide(props: {
 
     if (!user || !setFocusedDate) {
         return (<p>No selected date.</p>)
+    }
+
+    if (!localEvents) {
+        return <p>No events.</p>
     }
 
     return (
@@ -44,14 +105,58 @@ export default function CalendarDayViewSingleDaySlide(props: {
 
             {/* All Day Expandable List */}
             <div className="flex p-2 py-3 pb-6 w-full h-fit ">
-                <div className="flex flex-col gap-2 w-[5rem] pr-[0.5rem]">
-                    <Button variant={'outline'} className="aspect-square w-full h-fit"></Button>
+                <div className="flex flex-col gap-2 w-fit pr-[0.5rem]">
+                    <Button variant={'outline'} className="aspect-square size-12 "></Button>
                     <p className="text-[0.6rem] uppercase opacity-50 px-1">All-Day</p>
                 </div>
-                <div className="flex flex-col gap-[2px] w-[calc(100%-5rem)]">
-                    <Button variant={'outline'} className="bg-transparent! hover:bg-foreground/5! w-full h-7 bg-border"></Button>
-                    <Button variant={'outline'} className=" bg-transparent! hover:bg-foreground/5! w-full h-7 bg-border"></Button>
-                    <Button variant={'outline'} className="bg-transparent! hover:bg-foreground/5! w-full h-7 bg-border"></Button>
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-col gap-[0px] w-full"  
+                    >
+
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+
+                            <SortableContext
+                                items={localEvents.map(
+                                    (item) => item.id
+                                )}
+                                strategy={
+                                    verticalListSortingStrategy
+                                }
+                            >
+
+
+                                {localEvents?.map(event => {
+
+                                    if (event.type != 'all_day') {
+                                        return null;
+                                    }
+
+                                    try {
+                                        return (
+                                            <SmallEventBlock
+                                                key={event.id}
+                                                event={event}
+                                            />
+                                        )
+                                    }
+                                    catch (err) {
+                                        console.log({
+                                            err,
+                                            message: "Can't render the event",
+                                            event
+                                        })
+                                        return null;
+                                    }
+                                })}
+
+                            </SortableContext>
+                        </DndContext>
+                        {/* <Button variant={'outline'} className="bg-transparent! hover:bg-foreground/5! w-full h-7 bg-border"></Button>  */}
+                    </div>
                 </div>
             </div>
 
@@ -63,10 +168,10 @@ export default function CalendarDayViewSingleDaySlide(props: {
             )}>
                 <div className="flex flex-col w-full h-fit">
                     <div className="flex flex-col h-fit min-h-20">
-
+                        {/* <p className="debug">{JSON.stringify(props.events, null, 2)}</p> */}
 
                     </div>
-                    <div ref={containerRef} className="flex flex-col w-full h-fit overflow-visible" >
+                    <div ref={containerRef} className="relative flex flex-col w-full h-fit overflow-visible" >
                         <CalendarDayVerticalTimeListV2 {...{
                             timezone: user?.home_timezone
                         }}>
@@ -74,8 +179,10 @@ export default function CalendarDayViewSingleDaySlide(props: {
                                 events: props.events,
                                 onEventClick: (e, action, target) => {
                                     alert(target)
-                                }
-                            }} />
+                                },
+                                className: "left-[2.5rem] w-[calc(100%-2.5rem)]"
+                            }}
+                            />
                         </CalendarDayVerticalTimeListV2>
                     </div>
                     <div className="flex flex-col h-[50vh]">

@@ -32,14 +32,17 @@ export async function PATCH(req: NextRequest) {
             );
         }
 
-        const { preferred_timezones, name, description, ...rest } = body;
+        const { preferred_timezones, name, description, colors, ...rest } = body;
 
         const updated = await drizzle.db.update(Users).set({
             home_timezone: preferred_timezones && preferred_timezones.length > 0 ? preferred_timezones[0] : null,
             name,
             description,
-            preferred_timezones
-        })
+            preferred_timezones,
+            colors
+        }).where(
+            eq(Users.username, theUser.username)
+        )
 
 
         return NextResponse.json({

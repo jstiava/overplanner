@@ -1,13 +1,17 @@
 'use client'
 
 import OverplannerDate from "@/lib/DateTime/OverplannerDate";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OverplannerSessionContext } from "@/components/OverplannerSessionContext";
 
-export default function CalendarDialDefault() {
+export default function CalendarDialDefault(props: {
+    selected?: OverplannerDate | null,
+    onSelect?: (date: OverplannerDate) => any
+}) {
 
     const router = useRouter();
     const pathname = usePathname();
@@ -17,7 +21,6 @@ export default function CalendarDialDefault() {
 
     const [frameDate, setFrameDate] = useState(now);
     const [thisMonthsDates, setThisMonthsDates] = useState(OverplannerDate.getAllDatesInTheMonthOfTargetWithOverflow(now));
-
 
 
     return (
@@ -78,8 +81,14 @@ export default function CalendarDialDefault() {
                                         }
                                     >
                                         <div className={`flex w-full h-full rounded-xs border  border border-transparent `}>
-                                            <Button className="relative w-full h-full font-bold tracking-tight bg-foreground border border-border p-0" >
-                                                <p  className="text-[0.65rem]">{date.print("d")}</p>
+                                            <Button
+
+                                                className="relative w-full h-full font-bold tracking-tight bg-foreground border border-border p-0"
+                                                onClick={e => {
+                                                    props.onSelect && props.onSelect(date)
+                                                }}
+                                            >
+                                                <p className="text-[0.65rem]">{date.print("d")}</p>
                                                 <div className="absolute w-5 h-5 border border-background rounded-full " />
                                             </Button>
                                         </div>
@@ -98,9 +107,15 @@ export default function CalendarDialDefault() {
                                     }
                                 >
                                     <div className={`flex w-full h-full rounded-xs border  border border-transparent `}>
-                                        <Button variant={'ghost'} className="relative w-full h-full font-bold tracking-tight bg-background/30 border border-border p-0" >
-                                            <p className="text-[0.65rem]">{date.print("d")}</p>
-                                            <div className="absolute w-5 h-5 border border-foreground rounded-full " />
+                                        <Button
+                                            variant={'ghost'}
+                                            className="relative w-full h-full font-bold tracking-tight bg-background/30 border border-border p-0"
+                                            onClick={e => {
+                                                props.onSelect && props.onSelect(date)
+                                            }}
+                                        >
+                                            <p className="text-[0.7rem]">{date.print("d")}</p>
+                                            {/* <div className="absolute w-5 h-5 border border-foreground rounded-full " /> */}
                                         </Button>
                                     </div>
                                 </div>

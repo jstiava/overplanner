@@ -2,7 +2,7 @@
 
 import OverplannerDate from "@/lib/DateTime/OverplannerDate";
 import { OverplannerEventViewType, OverplannerUserPublicType } from "@/schema"
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { _getHoursInADayAsNumberArray } from "@/lib/DateTime/helpers";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import CalendarDayViewSingleDaySlide from "./CalendarDayViewSingleDaySlide";
@@ -17,6 +17,7 @@ import { OverplannerSessionContext } from "@/components/OverplannerSessionContex
 export default function CalendarWeekRowVirtualCarousel(props: {
     events: OverplannerEventViewType[]
 }) {
+
 
     const { user, focusedDate, setFocusedDate } = useContext(OverplannerSessionContext);
 
@@ -107,6 +108,7 @@ export default function CalendarWeekRowVirtualCarousel(props: {
             opts={{
                 loop: false,
             }}
+            
             className="carousel relative  w-full h-full  z-0 h-full  overflow-hidden p-0 "
 
         >
@@ -119,7 +121,9 @@ export default function CalendarWeekRowVirtualCarousel(props: {
                     }
 
                     return (
-                        <CarouselItem key={week[0].print("yyyy-MM-dd")} className="h-full min-h-0" >
+                        <CarouselItem
+                         key={week[0].print("yyyy-MM-dd")} 
+                        className="h-full min-h-0" >
 
 
                             <div className="flex justify-between items-center w-full">
